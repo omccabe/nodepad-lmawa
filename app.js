@@ -124,7 +124,7 @@ app.put('/documents/:id.:format?', function(req, res) {
 
 	d.save();
 
-	res.redirect('/documents');
+	res.redirect('http://localhost:3000/documents');
     });
 });
 

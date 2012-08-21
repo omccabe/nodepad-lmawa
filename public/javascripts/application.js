@@ -1,7 +1,7 @@
 $('.destroy').live('click', function(e) {
     e.preventDefault();
 
-    if(confirm('Are you sure you want to delete that item?')) {
+    //if(confirm('Are you sure you want to delete that item?')) {
 	var url = $(this).attr('href');
 	var el = $(this);
 	$.ajax( {
@@ -11,5 +11,5 @@ $('.destroy').live('click', function(e) {
 		el.parents('li').first().remove();
 	    }
 	});
-    }
+    //}
 });
