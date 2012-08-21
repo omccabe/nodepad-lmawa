@@ -99,6 +99,30 @@ describe('Nodepad', function() {
         });
     });
 
+    describe('DELETE /documents.<id>', function() {
+        it('should be able to delete a document', function(done) {
+            var findIt = function(callback) {
+                Document.findOne({ title: 'Another Test!' }).exec(function(err, res) {
+                    callback(err, res);
+                });
+            };
+            
+            findIt(function(err, res) {
+                request2.del(server + 'documents/' + res._id)
+                .end(function(res) {
+                    res.body.should.eql({});
+
+                    findIt(function(err, res) {
+                        should.not.exist(res);
+                        should.not.exist(err);
+
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
     //cleanup
     after(function(done) {
         Document.remove(function() {
