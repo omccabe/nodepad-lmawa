@@ -14,8 +14,8 @@ var db, Document;
 
 app.configure('test', function() {
     app.use(express.errorHandler( {
-	dumpExceptions: true,
-	shockStack: true
+        dumpExceptions: true,
+        shockStack: true
     }));
 
     db = mongoose.createConnection('localhost', 'nodepad-test');
@@ -53,19 +53,19 @@ app.get('/new', function(req, res) {
 
 var loadDocumentsPage = function(req, res) {
     Document.find().exec(function(err, documents) {
-	switch(req.params.format) {
-	    case 'json':
-	    res.send(documents.map(function(d) {
-		return d.toObject();
-	    }));
-	    break;
+        switch(req.params.format) {
+            case 'json':
+            res.send(documents.map(function(d) {
+                return d.toObject();
+            }));
+            break;
 
-	    default:
-	    res.render('documents/index.jade', {
-		title: 'Documents',
-		documents: documents 
-	    });
-	}
+            default:
+            res.render('documents/index.jade', {
+                title: 'Documents',
+                documents: documents 
+            });
+        }
     });
 };
 
@@ -76,19 +76,19 @@ app.get('/documents.:format?', function(req, res) {
 app.post('/documents.:format?', function(req, res) {
     var document = new Document(req.body['document']);
     document.save(function(err, product) {
-	if(err) {
-	    console.log("err: " + err);
-	    throw err;
-	}
+        if(err) {
+            console.log("err: " + err);
+            throw err;
+        }
 
-	switch(req.params.format) {
-	    case 'json':
-	    res.send(document.toObject());
-	    break;
-	    
-	    default:
-	    res.redirect('http://localhost:3000/documents');
-	}
+        switch(req.params.format) {
+            case 'json':
+            res.send(document.toObject());
+            break;
+            
+            default:
+            res.redirect('http://localhost:3000/documents');
+        }
     });
 });
 
@@ -96,18 +96,18 @@ app.post('/documents.:format?', function(req, res) {
 //Edit document
 app.get('/documents/:id.:format?/edit', function(req, res) {
     Document.findById(req.params.id, function(err, d) {
-	res.render('documents/edit.jade', {
-	    title: 'Edit Document',
-	    d: d
-	});
+        res.render('documents/edit.jade', {
+            title: 'Edit Document',
+            d: d
+        });
     });
 });
 
 //New document
 app.get('/documents/new', function(req, res) {
     res.render('documents/new.jade', {
-	title: 'New Document',
-	d: new Document()
+        title: 'New Document',
+        d: new Document()
     });
 });
 
@@ -119,22 +119,22 @@ app.get('/documents/:id.:format?', function(req, res) {
 // Update document
 app.put('/documents/:id.:format?', function(req, res) {
     Document.findById(req.params.id, function(err, d) {
-	d.title = req.body.document.title;
-	d.data = req.body.document.data;
+        d.title = req.body.document.title;
+        d.data = req.body.document.data;
 
-	d.save();
+        d.save();
 
-	res.redirect('http://localhost:3000/documents');
+        res.redirect('http://localhost:3000/documents');
     });
 });
 
 // Delete document
 app.del('/documents/:id.:format?', function(req, res) {
     Document.findByIdAndRemove(req.params.id, function(err, documents) {
-	console.log(req.params.id + ' deleted.');
-	// We don't need much of a response for this since the client side will handle the short term
-	// removal of the entry.
-	res.send("");
+        console.log(req.params.id + ' deleted.');
+        // We don't need much of a response for this since the client side will handle the short term
+        // removal of the entry.
+        res.send("");
     });
 });
 
