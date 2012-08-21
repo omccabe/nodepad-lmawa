@@ -1,6 +1,3 @@
-
-
-
 /**
  * Module dependencies.
  */
@@ -10,11 +7,25 @@ var express = require('express')
   , http = require('http')
   , path = require('path');
 
-var mongoose = require('mongoose');
-var db = mongoose.createConnection('localhost', 'nodepad');
-var Document = require('./models.js').Document(db);
-
 var app = express();
+
+var mongoose = require('mongoose');
+var db, Document;
+
+app.configure('test', function() {
+    app.use(express.errorHandler( {
+	dumpExceptions: true,
+	shockStack: true
+    }));
+
+    db = mongoose.createConnection('localhost', 'nodepad-test');
+});
+
+app.configure('development', function() {
+    db = mongoose.createConnection('localhost', 'nodepad');
+});
+
+Document = require('./models.js').Document(db);
 
 
 app.configure(function(){
@@ -125,14 +136,6 @@ app.del('/documents/:id.:format?', function(req, res) {
 	// removal of the entry.
 	res.send("");
     });
-});
-
-app.configure('test', function() {
-    app.use(express.errorHandler( {
-	dumpExceptions: true,
-	shockStack: true
-    }));
-    var db = mongoose.createConnection('localhost', 'nodepad-test');
 });
 
 

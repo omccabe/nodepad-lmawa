@@ -70,9 +70,9 @@ describe('Nodepad', function() {
     });
 
     describe('Get /', function() {
-	it("should return the index page", function(done) {
+	it("should return the documents page", function(done) {
 	    request2.get(server).end( function(res) {
-		res.text.should.include('<title>Express</title>');
+		res.text.should.include('<title>Documents</title>');
 		done();
 	    });
 	});
