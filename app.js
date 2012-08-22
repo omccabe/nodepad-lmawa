@@ -30,12 +30,12 @@ var Document = require('./models.js').Document(db);
 var User = require('./models.js').User(db);
 
 app.configure(function() {
-  app.set('port', process.env.PORT || 3000);
-  app.set('views', __dirname + '/views');
-  app.set('view engine', 'jade');
-  app.use(express.favicon());
-  app.use(express.logger('dev'));
-  app.use(express.bodyParser());
+    app.set('port', process.env.PORT || 3000);
+    app.set('views', __dirname + '/views');
+    app.set('view engine', 'jade');
+    app.use(express.favicon());
+    app.use(express.logger('dev'));
+    app.use(express.bodyParser());
     app.use(express.cookieParser());
     app.use(express.methodOverride());
 
@@ -81,13 +81,13 @@ app.get('/new', function(req, res) {
 var loadDocumentsPage = function(req, res) {
     Document.find().exec(function(err, documents) {
         switch(req.params.format) {
-            case 'json':
+        case 'json':
             res.send(documents.map(function(d) {
                 return d.toObject();
             }));
             break;
 
-            default:
+        default:
             res.render('documents/index.jade', {
                 title: 'Documents',
                 documents: documents 
@@ -109,11 +109,11 @@ app.post('/documents.:format?', function(req, res) {
         }
 
         switch(req.params.format) {
-            case 'json':
+        case 'json':
             res.send(document.toObject());
             break;
             
-            default:
+        default:
             res.redirect('http://localhost:3000/documents');
         }
     });
