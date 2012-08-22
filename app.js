@@ -2,15 +2,14 @@
  * Module dependencies.
  */
 
-var express = require('express')
-  , routes = require('./routes')
-  , http = require('http')
-  , path = require('path');
+var express    = require('express'),
+    app        = express(),
+    routes     = require('./routes'),
+    http       = require('http'),
+    path       = require('path'),
+    mongoose   = require('mongoose'),
+    mongoStore = require('connect-mongodb');
 
-var app = express();
-
-var mongoose = require('mongoose');
-var db, Document;
 
 app.configure('test', function() {
     app.use(express.errorHandler( {
@@ -18,33 +17,61 @@ app.configure('test', function() {
         shockStack: true
     }));
 
-    db = mongoose.createConnection('localhost', 'nodepad-test');
+    app.set('db-uri', 'mongodb://localhost/nodepad-test');
 });
 
 app.configure('development', function() {
-    db = mongoose.createConnection('localhost', 'nodepad');
+    app.set('db-uri', 'mongodb://localhost/nodepad');
+    app.use(express.errorHandler());
 });
 
-Document = require('./models.js').Document(db);
+var db = mongoose.createConnection(app.get('db-uri'));
+var Document = require('./models.js').Document(db);
+var User = require('./models.js').User(db);
 
-
-app.configure(function(){
+app.configure(function() {
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.favicon());
   app.use(express.logger('dev'));
   app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(path.join(__dirname, 'public')));
+    app.use(express.cookieParser());
+    app.use(express.methodOverride());
+
+    app.use(express.session({
+        secret: 'secretKey',
+        store : mongoStore(app.get('db-uri'))
+    }));
+
+    //This MUST come at the end or lots of stuff won't work. *grumble*
+    app.use(app.router);
+    app.use(express.static(path.join(__dirname, 'public')));
+
 });
 
-app.configure('development', function(){
-  app.use(express.errorHandler());
-});
 
-app.get('/', function(req, res) {
+var loadUser = function(req, res, next) {
+    console.log(req.session);
+    console.log('loadUser');
+    if (req.session.user_id) {
+        User.findById(req.session.user_id, function(user) {
+            if (user) {
+                req.currentUser = user;
+                next();
+            } else {
+                res.redirect('/sessions/new');
+            }
+        });
+    } else {
+        res.redirect('/sessions/new');
+    }    
+};
+
+
+//Routes
+
+app.get('/', loadUser, function(req, res) {
     res.redirect('http://localhost:3000/documents');
 });
 
@@ -136,6 +163,45 @@ app.del('/documents/:id.:format?', function(req, res) {
         // removal of the entry.
         res.send("");
     });
+});
+
+
+//Users
+
+app.get('/users/new', function(req, res) {
+    res.render('users/new.jade', {
+        title: 'New user',
+        user: new User()
+    });
+});
+
+app.post('/users.:format?', function(req, res) {
+    console.log('post users');
+    var user = new User(req.body.user);
+    user.save();
+    //console.log(req);
+    req.session.user_id = user.id;
+    res.redirect('/documents');
+});
+
+
+//Sessions
+
+app.get('/sessions/new', function(req, res) {
+    console.log('new session');
+    res.render('sessions/new.jade', {
+        user : new User()
+    });
+});
+
+app.post('/sessions', function(req, res) {
+    console.log('post sessions');
+    res.send("");
+});
+
+app.del('/sessions', function(req, res) {
+    console.log('del sessions');
+    res.send("");
 });
 
 
