@@ -8,4 +8,10 @@ html
       script(type='text/javascript', src='/javascripts/application.js')
 
   body
+    - if (typeof currentUser !== 'undefined')
+      p
+        a(href='/sessions', class='destroy') Log Out
+
     block content
+
+

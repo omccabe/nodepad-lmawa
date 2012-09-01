@@ -90,7 +90,8 @@ var loadDocumentsPage = function(req, res) {
         default:
             res.render('documents/index.jade', {
                 title: 'Documents',
-                documents: documents 
+                documents: documents,
+                currentUser: req.currentUser
             });
         }
     });
