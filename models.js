@@ -19,7 +19,7 @@ exports.Document = function(db) {
 //User
 
 var userSchema = new mongoose.Schema({
-    email           : String,
+    email           : { type: String, index: { unique: true }},
     hashed_password : String,
     salt            : String
 });
@@ -41,6 +41,17 @@ userSchema.method('encryptPassword', function(password) {
 
 userSchema.method('authenticate', function(plainText) {
     return this.encryptPassword(plainText) === this.hashed_password;
+});
+
+
+userSchema.pre('save', function(next) {
+    if(!this.password || this.password.length == 0
+       || !this.email || this.email.length == 0) {
+        next(new Error('You must supply an email and pasword'));
+    }
+    else {
+        next();
+    }
 });
 
 mongoose.model('User', userSchema);

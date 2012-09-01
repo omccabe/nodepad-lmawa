@@ -178,10 +178,23 @@ app.get('/users/new', function(req, res) {
 app.post('/users.:format?', function(req, res) {
     console.log('post users');
     var user = new User(req.body.user);
-    user.save();
-    //console.log(req);
-    req.session.user_id = user.id;
-    res.redirect('/documents');
+
+    function userSaved() {
+        req.session.user_id = user.id;
+        res.redirect('/documents');
+    }
+
+    function userSaveFailed() {
+        res.render('users/new.jade', {
+            user: userSchema
+        });
+    }
+
+    user.save(function(err) {
+        console.log(err);
+        res.redirect('/users/new');
+    });
+
 });
 
 
@@ -194,14 +207,31 @@ app.get('/sessions/new', function(req, res) {
     });
 });
 
-app.post('/sessions', function(req, res) {
+app.post('/sessions', function(req, response) {
     console.log('post sessions');
-    res.send("");
+    console.log(req.body.user.email);
+
+    User.findOne({ email: req.body.user.email}).exec(function(err, res) {
+        console.log(err);
+        console.log(res);
+        if(!err && res && res.authenticate(req.body.user.password)) {
+            console.log('authenticated!');
+            response.redirect('/documents');
+        }
+        else {
+            console.log('bad password');
+            response.redirect('/sessions/new');
+        }
+        
+    });
 });
 
 app.del('/sessions', function(req, res) {
     console.log('del sessions');
-    res.send("");
+    if(req.session) {
+        req.session.destroy(function() {});
+    }
+    res.redirect('/sessions/new');
 });
 
 
