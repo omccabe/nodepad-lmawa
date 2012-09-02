@@ -4,8 +4,8 @@ block content
 
   h2=d.title
 
-  a(class='button', href='/documents/' + d.id + '/edit') Edit
-  a(href='/documents', class='button')
-    &larr; All Documents
   p
-    p=d.data
+    a(class='button', href='/documents/' + d.id + '/edit') Edit
+    a(href='/documents', class='button')
+      &larr; All Documents
+  p=d.data
