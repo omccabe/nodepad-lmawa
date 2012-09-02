@@ -77,7 +77,7 @@ app.get('/new', loadUser, function(req, res) {
 });
 
 var loadDocumentsPage = function(req, res) {
-    Document.find().exec(function(err, documents) {
+    Document.find({ user_id: req.session.user_id }).exec(function(err, documents) {
 
         switch(req.params.format) {
         case 'json':
@@ -102,6 +102,7 @@ app.get('/documents.:format?', loadUser, function(req, res) {
 
 app.post('/documents.:format?', loadUser, function(req, res) {
     var document = new Document(req.body['document']);
+    document.user_id = req.session.user_id;
     document.save(function(err, product) {
         if(err) {
             console.log("err: " + err);
@@ -123,10 +124,15 @@ app.post('/documents.:format?', loadUser, function(req, res) {
 //Edit document
 app.get('/documents/:id.:format?/edit', loadUser, function(req, res) {
     Document.findById(req.params.id, function(err, d) {
-        res.render('documents/edit.jade', {
-            title: 'Edit Document',
-            d: d
-        });
+        if(d.user_id == req.session.user_id) {
+            res.render('documents/edit.jade', {
+                title: 'Edit Document',
+                d: d
+            });
+        }
+        else {
+            res.send("Unauthorized");
+        }
     });
 });
 
@@ -146,10 +152,16 @@ app.get('/documents/:id.:format?', loadUser, function(req, res) {
 // Update document
 app.put('/documents/:id.:format?', loadUser, function(req, res) {
     Document.findById(req.params.id, function(err, d) {
-        d.title = req.body.document.title;
-        d.data = req.body.document.data;
+        if(d.user_id == req.session.user_id) {
+            d.title = req.body.document.title;
+            d.data = req.body.document.data;
+            d.user_id = req.session.user_id;
 
-        d.save();
+            d.save();
+        }
+        else {
+            res.send("Unauthorized");
+        }
 
         res.redirect(303,'http://localhost:3000/documents');
     });
@@ -157,7 +169,11 @@ app.put('/documents/:id.:format?', loadUser, function(req, res) {
 
 // Delete document
 app.del('/documents/:id.:format?', loadUser, function(req, res) {
-    Document.findByIdAndRemove(req.params.id, function(err, documents) {
+    Document.findById(req.params.id, function(err, document) {
+        if(document.user_id == req.session.user_id) {
+            document.remove();
+        }
+
         // We don't need much of a response for this since the client side will handle the short term
         // removal of the entry.
         res.send("");

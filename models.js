@@ -4,9 +4,10 @@ var mongoose = require('mongoose'),
 //Document
 
 var docSchema = new mongoose.Schema({
-    title : String,
-    data  : [String],
-    tags  : [String]
+    title   : String,
+    data    : [String],
+    tags    : [String],
+    user_id : String
 });
 
 mongoose.model('Document', docSchema);
