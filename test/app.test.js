@@ -11,16 +11,24 @@ var server = 'http://localhost:3000/';
 
 describe('Nodepad', function() {
 
-    function containsUserFields(res) {
-        res.text.should.include('user[email]');
-        res.text.should.include('user[password]');
-    }
+    describe('GET /documents without being logged in', function() {
+        it('should be rejected and redirected to login', function(done) {
+            request2.get(server+'documents')
+                .redirects(0)
+                .end(function(res) {
+                    res.statusCode.should.equal(303);
+                    res.headers.location.should.include('sessions/new');
+                    done();
+                });
+        });
+    });
 
     describe('GET /users/new', function() {
         it('should be able to launch the new user page', function(done) {
             request2.get(server + 'users/new')
                 .end(function(res) {
-                    containsUserFields(res);
+                    res.text.should.include('user[email]');
+                    res.text.should.include('user[password]');
                     done();
                 });
         });
@@ -37,7 +45,6 @@ describe('Nodepad', function() {
                     res.statusCode.should.equal(303);
                     res.headers.location.should.include('documents');
                     res.headers['set-cookie'][0].should.include('connect');
-                    console.log(res.headers['set-cookie']);
                     cookie = res.headers['set-cookie'][0];
                     done();
                 });
@@ -76,7 +83,7 @@ describe('Nodepad', function() {
 
     describe('GET /documents', function() {
         it('should be able to get the documents index', function(done) {
-            request2.post(server+'documents')
+            request2.get(server+'documents')
                 .set('Cookie', cookie)
                 .end(function(res) {
                     res.text.match('<li>Test</li>');
