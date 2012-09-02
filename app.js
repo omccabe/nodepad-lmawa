@@ -146,7 +146,25 @@ app.get('/documents/new', loadUser, function(req, res) {
 
 // Read document
 app.get('/documents/:id.:format?', loadUser, function(req, res) {
-    console.log('get /documents/:id.:format?');
+    Document.findById(req.params.id, function(err, d) {
+        if(d.user_id != req.session.user_id) {
+            res.send("Unauthorized");
+        }
+        else {
+            switch (req.params.format) {
+            case 'json':
+                res.send(d.__doc);
+                break;
+
+            default:
+                res.render('documents/show.jade', {
+                    d: d,
+                    currentUser: req.currentUser,
+                    title: d.title
+                });
+            }
+        }
+    });
 });
 
 // Update document
@@ -219,7 +237,6 @@ app.get('/sessions/new', function(req, res) {
 app.post('/sessions', function(req, response) {
     User.findOne({ email: req.body.user.email}).exec(function(err, res) {
         if(!err && res && res.authenticate(req.body.user.password)) {
-            console.log('authenticated!');
             req.session.user_id = res.id;
             response.redirect(303,'/documents');
         }
