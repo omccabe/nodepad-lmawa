@@ -78,7 +78,6 @@ app.get('/new', loadUser, function(req, res) {
 
 var loadDocumentsPage = function(req, res) {
     Document.find({ user_id: req.session.user_id }).exec(function(err, documents) {
-
         switch(req.params.format) {
         case 'json':
             res.send(documents.map(function(d) {
@@ -94,6 +93,7 @@ var loadDocumentsPage = function(req, res) {
             });
         }
     });
+
 };
 
 app.get('/documents.:format?', loadUser, function(req, res) {

@@ -34,24 +34,38 @@ describe('Nodepad', function() {
         });
     });
 
-    var cookie;
-
     function shouldRedirectToDocuments(res) {
         res.statusCode.should.equal(303);
         res.headers.location.should.include('documents');
     }
 
+    function makeANewUser(user, callback) {
+        request2.post(server + 'users/')
+            .send(user)
+            .redirects(0)
+            .end(callback);
+    }
+
+    var user1Cookie, user2Cookie;
+
     describe('POST /users/.json', function() {
         it('should be able to make a new user', function(done) {
-            request2.post(server + 'users/')
-                .send({ user: { email: 'omccabe@gmail.com', 'password': 'test' }})
-                .redirects(0)
-                .end(function(res) {
-                    shouldRedirectToDocuments(res);
-                    res.headers['set-cookie'][0].should.include('connect');
-                    cookie = res.headers['set-cookie'][0];
-                    done();
-                });
+            makeANewUser({ user: { email: 'omccabe@gmail.com', 'password': 'test' }}, function(res) {
+                shouldRedirectToDocuments(res);
+                res.headers['set-cookie'][0].should.include('connect');
+                user1Cookie = res.headers['set-cookie'][0];
+                done();
+            });
+        });
+
+        it('should be able to make a second user', function(done) {
+            makeANewUser({ user: { email: 'amccabe@gmail.com', 'password': 'asdf' }}, function(res) {
+                shouldRedirectToDocuments(res);
+                res.headers['set-cookie'][0].should.include('connect');
+                user2Cookie = res.headers['set-cookie'][0];
+                user2Cookie.should.not.equal(user1Cookie);
+                done();
+            });
         });
     });
 
@@ -59,7 +73,7 @@ describe('Nodepad', function() {
     describe('POST /documents.json', function() {
         it('should store the document in the database', function(done) {
             request2.post(server+'documents.json')
-                .set('Cookie', cookie)
+                .set('Cookie', user1Cookie)
                 .send({document: {title: 'Test', tags: ["1234", "4567"], data: ["my note"] }})
                 .end(function(res) {
                     res.body.title.should.equal('Test');
@@ -76,7 +90,7 @@ describe('Nodepad', function() {
         it('should be able to store via html', function(done) {
             request2.post(server+'documents')
                 .set('Content-type', 'application/x-www-form-urlencoded')
-                .set('Cookie', cookie)
+                .set('Cookie', user1Cookie)
                 .redirects(0)
                 .send('document[title]=Another Test!')
                 .end(function(res) {
@@ -89,19 +103,30 @@ describe('Nodepad', function() {
     describe('GET /documents', function() {
         it('should be able to get the documents index', function(done) {
             request2.get(server+'documents')
-                .set('Cookie', cookie)
+                .set('Cookie', user1Cookie)
                 .end(function(res) {
-                    res.text.match('<li>Test</li>');
-                    res.text.match('<li>Another Test!</li>');
+                    res.text.should.include('Test');
+                    res.text.should.include('Another Test!');
                     done();
                 });
         });
+
+        it('should prevent the 2nd user from seeing the new documents', function(done) {
+            request2.get(server+'documents')
+                .set('Cookie', user2Cookie)
+                .end(function(res) {
+                    res.text.should.not.include('Test');
+                    res.text.should.not.include('Another Test!');
+                    done();
+                });
+        });
+
     });
 
     describe('GET /documents.json', function() {
         it('should find the document we just posted', function(done) {
             request2.get(server + 'documents.json')
-                .set('Cookie', cookie)
+                .set('Cookie', user1Cookie)
                 .end(function(res) {
 
                     res.header['content-type'].should.include('application/json');
@@ -114,6 +139,15 @@ describe('Nodepad', function() {
                 });
         });
 
+        it('should not find the document for user 2', function(done) {
+            request2.get(server + 'documents.json')
+                .set('Cookie', user2Cookie)
+                .end(function(res) {
+                    res.header['content-type'].should.include('application/json');
+                    res.body.should.be.empty;
+                    done();
+                });
+        });
     });
 
     describe('PUT /documents.<id>', function() {
@@ -123,7 +157,7 @@ describe('Nodepad', function() {
                 var editedData = 'Some new data';
 
                 request2.put(server+'documents/'+res._id)
-                    .set('Cookie', cookie)
+                    .set('Cookie', user1Cookie)
                     .redirects(0)
                     .send({ document: {
                         title: editedTitle,
@@ -133,7 +167,7 @@ describe('Nodepad', function() {
                         shouldRedirectToDocuments(putres);
 
                         request2.get(server + 'documents/' + res._id + '/edit')
-                            .set('Cookie', cookie)
+                            .set('Cookie', user1Cookie)
                             .end(function(res) {
                                 res.text.should.include(editedTitle);
                                 res.text.should.include(editedData);
@@ -155,7 +189,7 @@ describe('Nodepad', function() {
             
             findIt(function(err, res) {
                 request2.del(server + 'documents/' + res._id)
-                    .set('Cookie', cookie)
+                    .set('Cookie', user1Cookie)
                     .redirects(0)
                     .end(function(res) {
                         res.statusCode.should.equal(200);
