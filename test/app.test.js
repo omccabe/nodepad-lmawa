@@ -6,7 +6,6 @@ var assert = require('assert');
 var request2 = require('superagent');
 var should = require('should');
 
-
 var server = 'http://localhost:3000/';
 
 describe('Nodepad', function() {
@@ -49,7 +48,6 @@ describe('Nodepad', function() {
     });
 
 
-
     describe('GET /documents.json', function() {
         it('should find the document we just posted', function(done) {
             request2.get(server + 'documents.json')
@@ -66,14 +64,17 @@ describe('Nodepad', function() {
         });
     });
 
+    /*
     describe('GET /', function() {
-        it("should return the documents page", function(done) {
+        it("should return the login page", function(done) {
             request2.get(server).end( function(res) {
-                res.text.should.include('<title>Documents</title>');
+                res.text.should.include('Log In');
+                containsUserFields(res);
                 done();
             });
         });
     });
+     */
 
     describe('PUT /documents.<id>', function() {
         it("should be able to edit a document", function(done) {
@@ -122,6 +123,29 @@ describe('Nodepad', function() {
             });
         });
     });
+
+    function containsUserFields(res) {
+        res.text.should.include('user[email]');
+        res.text.should.include('user[password]');
+    }
+
+    describe('GET /users/new', function() {
+        it('should be able to launch the new user page', function(done) {
+            request2.get(server + 'users/new')
+            .end(function(res) {
+                containsUserFields(res);
+                done();
+            });
+        });
+    });
+
+    describe('POST /users/.json', function() {
+        it('should be able to make a new user', function(done) {
+            done();
+        });
+    });
+
+
 
     //cleanup
     after(function(done) {

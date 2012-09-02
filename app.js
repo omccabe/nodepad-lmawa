@@ -52,19 +52,18 @@ app.configure(function() {
 
 
 var loadUser = function(req, res, next) {
-    console.log(req.session);
     console.log('loadUser');
     if (req.session.user_id) {
-        User.findById(req.session.user_id, function(user) {
+        User.findById(req.session.user_id, function(err, user) {
             if (user) {
                 req.currentUser = user;
                 next();
             } else {
-                res.redirect('/sessions/new');
+                res.redirect(303,'/sessions/new');
             }
         });
     } else {
-        res.redirect('/sessions/new');
+        res.redirect(303,'/sessions/new');
     }    
 };
 
@@ -72,14 +71,15 @@ var loadUser = function(req, res, next) {
 //Routes
 
 app.get('/', loadUser, function(req, res) {
-    res.redirect('http://localhost:3000/documents');
+    res.redirect(303,'http://localhost:3000/documents');
 });
 
-app.get('/new', function(req, res) {
+app.get('/new', loadUser, function(req, res) {
 });
 
 var loadDocumentsPage = function(req, res) {
     Document.find().exec(function(err, documents) {
+
         switch(req.params.format) {
         case 'json':
             res.send(documents.map(function(d) {
@@ -97,11 +97,12 @@ var loadDocumentsPage = function(req, res) {
     });
 };
 
-app.get('/documents.:format?', function(req, res) {
+app.get('/documents.:format?', loadUser, function(req, res) {
+    console.log('get documents');
     loadDocumentsPage(req, res);
 });
 
-app.post('/documents.:format?', function(req, res) {
+app.post('/documents.:format?', loadUser, function(req, res) {
     var document = new Document(req.body['document']);
     document.save(function(err, product) {
         if(err) {
@@ -115,14 +116,14 @@ app.post('/documents.:format?', function(req, res) {
             break;
             
         default:
-            res.redirect('http://localhost:3000/documents');
+            res.redirect(303,'http://localhost:3000/documents');
         }
     });
 });
 
 
 //Edit document
-app.get('/documents/:id.:format?/edit', function(req, res) {
+app.get('/documents/:id.:format?/edit', loadUser, function(req, res) {
     Document.findById(req.params.id, function(err, d) {
         res.render('documents/edit.jade', {
             title: 'Edit Document',
@@ -132,7 +133,7 @@ app.get('/documents/:id.:format?/edit', function(req, res) {
 });
 
 //New document
-app.get('/documents/new', function(req, res) {
+app.get('/documents/new', loadUser, function(req, res) {
     res.render('documents/new.jade', {
         title: 'New Document',
         d: new Document()
@@ -140,24 +141,24 @@ app.get('/documents/new', function(req, res) {
 });
 
 // Read document
-app.get('/documents/:id.:format?', function(req, res) {
+app.get('/documents/:id.:format?', loadUser, function(req, res) {
     console.log('get /documents/:id.:format?');
 });
 
 // Update document
-app.put('/documents/:id.:format?', function(req, res) {
+app.put('/documents/:id.:format?', loadUser, function(req, res) {
     Document.findById(req.params.id, function(err, d) {
         d.title = req.body.document.title;
         d.data = req.body.document.data;
 
         d.save();
 
-        res.redirect('http://localhost:3000/documents');
+        res.redirect(303,'http://localhost:3000/documents');
     });
 });
 
 // Delete document
-app.del('/documents/:id.:format?', function(req, res) {
+app.del('/documents/:id.:format?', loadUser, function(req, res) {
     Document.findByIdAndRemove(req.params.id, function(err, documents) {
         console.log(req.params.id + ' deleted.');
         // We don't need much of a response for this since the client side will handle the short term
@@ -180,20 +181,15 @@ app.post('/users.:format?', function(req, res) {
     console.log('post users');
     var user = new User(req.body.user);
 
-    function userSaved() {
-        req.session.user_id = user.id;
-        res.redirect('/documents');
-    }
-
-    function userSaveFailed() {
-        res.render('users/new.jade', {
-            user: userSchema
-        });
-    }
-
     user.save(function(err) {
-        console.log(err);
-        res.redirect('/users/new');
+        if(err) {
+            console.log(err);
+            res.redirect(303,'/users/new');
+        }
+        else {
+            req.session.user_id = user.id;
+            res.redirect(303,'/documents');
+        }
     });
 
 });
@@ -203,36 +199,39 @@ app.post('/users.:format?', function(req, res) {
 
 app.get('/sessions/new', function(req, res) {
     console.log('new session');
+
     res.render('sessions/new.jade', {
+        title: 'Log In',
         user : new User()
     });
 });
 
 app.post('/sessions', function(req, response) {
     console.log('post sessions');
-    console.log(req.body.user.email);
 
     User.findOne({ email: req.body.user.email}).exec(function(err, res) {
-        console.log(err);
-        console.log(res);
         if(!err && res && res.authenticate(req.body.user.password)) {
             console.log('authenticated!');
-            response.redirect('/documents');
+            req.session.user_id = res.id;
+            response.redirect(303,'/documents');
         }
         else {
             console.log('bad password');
-            response.redirect('/sessions/new');
+            response.redirect(303,'/sessions/new');
         }
         
     });
 });
 
-app.del('/sessions', function(req, res) {
+app.del('/sessions', loadUser, function(req, res) {
     console.log('del sessions');
+
     if(req.session) {
-        req.session.destroy(function() {});
+        req.session.destroy();
     }
-    res.redirect('/sessions/new');
+    //res.redirect(303, '/sessions/new');
+    res.send("");
+
 });
 
 

@@ -13,3 +13,7 @@ $('.destroy').live('click', function(e) {
         });
     //}
 });
+
+$('#logout').live('click', function(e) {
+    setTimeout(function() { window.location.href = '/sessions/new'; }, 150);
+});
