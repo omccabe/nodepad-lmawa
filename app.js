@@ -56,13 +56,16 @@ var loadUser = function(req, res, next) {
     if (req.session.user_id) {
         User.findById(req.session.user_id, function(err, user) {
             if (user) {
+                console.log('found user');
                 req.currentUser = user;
                 next();
             } else {
+                console.log('user not found');
                 res.redirect(303,'/sessions/new');
             }
         });
     } else {
+        console.log('userid not found');
         res.redirect(303,'/sessions/new');
     }    
 };
@@ -116,7 +119,7 @@ app.post('/documents.:format?', loadUser, function(req, res) {
             break;
             
         default:
-            res.redirect(303,'http://localhost:3000/documents');
+            res.redirect('http://localhost:3000/documents');
         }
     });
 });
@@ -241,3 +244,4 @@ http.createServer(app).listen(app.get('port'), function(){
 
 exports.app = app;
 exports.Document = Document;
+exports.User = User;
