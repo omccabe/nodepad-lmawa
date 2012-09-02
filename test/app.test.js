@@ -36,14 +36,18 @@ describe('Nodepad', function() {
 
     var cookie;
 
+    function shouldRedirectToDocuments(res) {
+        res.statusCode.should.equal(303);
+        res.headers.location.should.include('documents');
+    }
+
     describe('POST /users/.json', function() {
         it('should be able to make a new user', function(done) {
             request2.post(server + 'users/')
                 .send({ user: { email: 'omccabe@gmail.com', 'password': 'test' }})
                 .redirects(0)
                 .end(function(res) {
-                    res.statusCode.should.equal(303);
-                    res.headers.location.should.include('documents');
+                    shouldRedirectToDocuments(res);
                     res.headers['set-cookie'][0].should.include('connect');
                     cookie = res.headers['set-cookie'][0];
                     done();
@@ -73,9 +77,10 @@ describe('Nodepad', function() {
             request2.post(server+'documents')
                 .set('Content-type', 'application/x-www-form-urlencoded')
                 .set('Cookie', cookie)
+                .redirects(0)
                 .send('document[title]=Another Test!')
                 .end(function(res) {
-                    res.text.match('<li>Another Test!</li>');
+                    shouldRedirectToDocuments(res);
                     done();
                 });
         });
@@ -87,11 +92,11 @@ describe('Nodepad', function() {
                 .set('Cookie', cookie)
                 .end(function(res) {
                     res.text.match('<li>Test</li>');
+                    res.text.match('<li>Another Test!</li>');
                     done();
                 });
         });
     });
-
 
     describe('GET /documents.json', function() {
         it('should find the document we just posted', function(done) {
@@ -111,19 +116,6 @@ describe('Nodepad', function() {
 
     });
 
-
-    /*
-     describe('GET /', function() {
-     it("should return the login page", function(done) {
-     request2.get(server).end( function(res) {
-     res.text.should.include('Log In');
-     containsUserFields(res);
-     done();
-     });
-     });
-     });
-     */
-
     describe('PUT /documents.<id>', function() {
         it("should be able to edit a document", function(done) {
             Document.findOne({ title: 'Test'}).exec(function(err, res) {
@@ -132,11 +124,14 @@ describe('Nodepad', function() {
 
                 request2.put(server+'documents/'+res._id)
                     .set('Cookie', cookie)
+                    .redirects(0)
                     .send({ document: {
                         title: editedTitle,
                         data: editedData
                     }})
-                    .end(function() {
+                    .end(function(putres) {
+                        shouldRedirectToDocuments(putres);
+
                         request2.get(server + 'documents/' + res._id + '/edit')
                             .set('Cookie', cookie)
                             .end(function(res) {
@@ -160,8 +155,10 @@ describe('Nodepad', function() {
             
             findIt(function(err, res) {
                 request2.del(server + 'documents/' + res._id)
+                    .set('Cookie', cookie)
+                    .redirects(0)
                     .end(function(res) {
-                        res.body.should.eql({});
+                        res.statusCode.should.equal(200);
 
                         findIt(function(err, res) {
                             should.not.exist(res);
@@ -178,10 +175,7 @@ describe('Nodepad', function() {
     //cleanup
     after(function(done) {
         Document.remove(function() {
-            console.log('cleaned up documents');
-
             User.remove(function() {
-                console.log('cleaned up users');
                 done();
             });
         });

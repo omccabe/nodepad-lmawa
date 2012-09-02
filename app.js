@@ -52,20 +52,16 @@ app.configure(function() {
 
 
 var loadUser = function(req, res, next) {
-    console.log('loadUser');
     if (req.session.user_id) {
         User.findById(req.session.user_id, function(err, user) {
             if (user) {
-                console.log('found user');
                 req.currentUser = user;
                 next();
             } else {
-                console.log('user not found');
                 res.redirect(303,'/sessions/new');
             }
         });
     } else {
-        console.log('userid not found');
         res.redirect(303,'/sessions/new');
     }    
 };
@@ -101,7 +97,6 @@ var loadDocumentsPage = function(req, res) {
 };
 
 app.get('/documents.:format?', loadUser, function(req, res) {
-    console.log('get documents');
     loadDocumentsPage(req, res);
 });
 
@@ -119,7 +114,7 @@ app.post('/documents.:format?', loadUser, function(req, res) {
             break;
             
         default:
-            res.redirect('http://localhost:3000/documents');
+            res.redirect(303,'http://localhost:3000/documents');
         }
     });
 });
@@ -163,7 +158,6 @@ app.put('/documents/:id.:format?', loadUser, function(req, res) {
 // Delete document
 app.del('/documents/:id.:format?', loadUser, function(req, res) {
     Document.findByIdAndRemove(req.params.id, function(err, documents) {
-        console.log(req.params.id + ' deleted.');
         // We don't need much of a response for this since the client side will handle the short term
         // removal of the entry.
         res.send("");
@@ -181,7 +175,6 @@ app.get('/users/new', function(req, res) {
 });
 
 app.post('/users.:format?', function(req, res) {
-    console.log('post users');
     var user = new User(req.body.user);
 
     user.save(function(err) {
@@ -201,8 +194,6 @@ app.post('/users.:format?', function(req, res) {
 //Sessions
 
 app.get('/sessions/new', function(req, res) {
-    console.log('new session');
-
     res.render('sessions/new.jade', {
         title: 'Log In',
         user : new User()
@@ -210,8 +201,6 @@ app.get('/sessions/new', function(req, res) {
 });
 
 app.post('/sessions', function(req, response) {
-    console.log('post sessions');
-
     User.findOne({ email: req.body.user.email}).exec(function(err, res) {
         if(!err && res && res.authenticate(req.body.user.password)) {
             console.log('authenticated!');
@@ -227,8 +216,6 @@ app.post('/sessions', function(req, response) {
 });
 
 app.del('/sessions', loadUser, function(req, res) {
-    console.log('del sessions');
-
     if(req.session) {
         req.session.destroy();
     }
