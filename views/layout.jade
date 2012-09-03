@@ -17,7 +17,7 @@ html
               a(href='/') Nodepad
           - if (typeof currentUser !== 'undefined')
             li(class='right')
-              a(href='/sessions', class='destroy') Log Out
+              a(href='/sessions/new', class='logout') Log Out
       block content
     script(type='text/javascript', src='/javascripts/application.js')
 

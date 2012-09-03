@@ -228,6 +228,10 @@ app.post('/users.:format?', function(req, res) {
 //Sessions
 
 app.get('/sessions/new', function(req, res) {
+    if(req.session) {
+        req.session.destroy();
+    }
+
     res.render('sessions/new.jade', {
         title: 'Log In',
         user : new User()
