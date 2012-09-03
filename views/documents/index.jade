@@ -1,16 +1,29 @@
 extends ../layout
 
 block content
-  h1 Your Documents
+  div(class='outline-view', id='left')
+    div(id='DocumentTitles')
+      ul(id='document-list')
+        - each d in documents
+          li
+            a(id=d.id, href='/documents/' + d.id)
+              =d.title
 
-  P
-    a(class='button', href='/documents/new') + New Document
-    a(id='logout', class='button', href='/sessions/', class='button destroy') + Log Out
-
-  ul
-    - each d in documents
+    ul(class='toolbar')
       li
-        a(class='button', href='/documents/' + d.id + '/edit') Edit
-        a(class='button destroy', href='/documents/' + d.id) Delete
-        a(href='/documents/' + d.id)
-          =d.title
+        a(href='/documents/new')
+          +
+      li
+        a(href='#', id='delete-document')
+          -
+
+  div(class='content-divider')
+
+  div(class='content')
+    div(id='editor-container')
+      textarea(name=currentDoc.title, id='editor')
+        =currentDoc.data || ''
+    
+  ul(id='controls',class='toolbar')
+    li
+      a(href='#', id='save-button') Save

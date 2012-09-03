@@ -89,7 +89,8 @@ var loadDocumentsPage = function(req, res) {
             res.render('documents/index.jade', {
                 title: 'Documents',
                 documents: documents,
-                currentUser: req.currentUser
+                currentUser: req.currentUser,
+                currentDoc: documents[0]
             });
         }
     });
@@ -153,9 +154,8 @@ app.get('/documents/:id.:format?', loadUser, function(req, res) {
         else {
             switch (req.params.format) {
             case 'json':
-                res.send(d.__doc);
+                res.send(d.toObject());
                 break;
-
             default:
                 res.render('documents/show.jade', {
                     d: d,
@@ -171,8 +171,8 @@ app.get('/documents/:id.:format?', loadUser, function(req, res) {
 app.put('/documents/:id.:format?', loadUser, function(req, res) {
     Document.findById(req.params.id, function(err, d) {
         if(d.user_id == req.session.user_id) {
-            d.title = req.body.document.title;
-            d.data = req.body.document.data;
+            d.title = req.body.document.title || d.title;
+            d.data = req.body.document.data || d.data;
             d.user_id = req.session.user_id;
 
             d.save();
