@@ -1,5 +1,12 @@
 // Correct widths and heights based on window size
 function resize() {
+    $('.main-pane').css({
+        'height': $('.main-pane').height()
+    });
+    console.log($('.main-pane').height());
+};
+
+function test() {    
     var height = $(window).height() - $('#header').height() - 1,
         width = $('.content').width(),
         ov = $('.outline-view'),
@@ -31,11 +38,11 @@ function resize() {
 }
 
 $('#document-list li a').live('click', function(e) {
-    var li = $(this);
+    var li = $(this).parent();
 
     $.get(this.href + '.json', function(data) {
-        $('#document-list .selected').removeClass('selected');
-        li.addClass('selected');
+        $('#document-list .active').removeClass('active');
+        li.addClass('active');
         $('#editor').val(data.data);
         $('#editor').focus();
     });
@@ -43,12 +50,12 @@ $('#document-list li a').live('click', function(e) {
     e.preventDefault();
 });
 
-if ($('#document-list .selected').length == 0) {
+if ($('#document-list .active').length == 0) {
     $('#document-list li a').first().click();
 }
 
 $('#save-button').click(function() {
-    var id = $('#document-list .selected').attr('id');
+    var id = $('#document-list .active').children().attr('id');
     params = { document: { data: $('#editor').val(), id: id } };
     $.ajax( {
         url: '/documents/' + id + '.json',
@@ -61,10 +68,10 @@ $('#save-button').click(function() {
 });
 
 $('#delete-document').live('click', function(e) {
-    var el = $('#document-list .selected');
+    var el = $('#document-list .active');
 
     $.ajax( {
-        url: '/documents/' + el.attr('id'),
+        url: '/documents/' + el.children().attr('id'),
         type: 'delete',
         success: function() {
             el.remove();
@@ -73,6 +80,6 @@ $('#delete-document').live('click', function(e) {
     });
 });
 
-$(window).resize(resize);
-$(window).focus(resize);
-resize();
+//$(window).resize(resize);
+//$(window).focus(resize);
+//resize();
