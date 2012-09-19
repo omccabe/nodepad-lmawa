@@ -8,8 +8,8 @@ var express    = require('express'),
     http       = require('http'),
     path       = require('path'),
     mongoose   = require('mongoose'),
-    mongoStore = require('connect-mongodb');
-
+    mongoStore = require('connect-mongodb'),
+    flash      = require('connect-flash');
 
 app.configure('test', function() {
     app.use(express.errorHandler( {
@@ -43,6 +43,8 @@ app.configure(function() {
         secret: 'secretKey',
         store : mongoStore(app.get('db-uri'))
     }));
+
+    app.use(flash());
 
     //This MUST come at the end or lots of stuff won't work. *grumble*
     app.use(app.router);
@@ -90,7 +92,8 @@ var loadDocumentsPage = function(req, res) {
                 title: 'Documents',
                 documents: documents,
                 currentUser: req.currentUser,
-                currentDoc: documents[0]
+                currentDoc: documents[0],
+                flash: req.flash('info')
             });
         }
     });
@@ -116,6 +119,7 @@ app.post('/documents.:format?', loadUser, function(req, res) {
             break;
             
         default:
+            req.flash('info', 'Document Saved!');
             res.redirect(303,'http://localhost:3000/documents');
         }
     });
@@ -230,7 +234,7 @@ app.post('/users.:format?', function(req, res) {
 app.get('/sessions/new', function(req, res) {
     if(req.session) {
         req.session.destroy();
-    }
+    }    
 
     res.render('sessions/new.jade', {
         title: 'Log In',
