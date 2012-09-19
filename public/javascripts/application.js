@@ -1,41 +1,16 @@
 // Correct widths and heights based on window size
 function resize() {
-    $('.main-pane').css({
-        'height': $('.main-pane').height()
+    var height = $(window).height() - $('.navbar').height() - 100;
+
+    $('#DocumentTitles').css({
+        'height'   : height,
+        'position' : 'relative',
+        'top'      : '9px'
     });
-    console.log($('.main-pane').height());
+    $('#editor').css({
+        'height': height
+    });
 };
-
-function test() {    
-    var height = $(window).height() - $('#header').height() - 1,
-        width = $('.content').width(),
-        ov = $('.outline-view'),
-        ed = $('#editor'),
-        toolbar = $('.toolbar'),
-        divider = $('.content-divider'),
-        content = $('.content'),
-        controls = $('#controls');
-
-    $('#DocumentTitles').css({ height: height - toolbar.height() + 'px' });
-    ov.css({ height: height + 'px' });
-    toolbar.css({ width: ov.width() + 'px' });
-
-    content.css({
-        height: height - controls.height() + 'px',
-        width: $('body').width() - ov.width() - divider.width() - 1 + 'px'
-    });
-
-    divider.css({ height: height + 'px' });
-
-    ed.css({
-        width: content.width() - 5 + 'px',
-        height: content.height() - 5 + 'px'
-    }).focus();
-
-    $('#controls').css({
-        width: content.width() + 'px'
-    });
-}
 
 $('#document-list li a').live('click', function(e) {
     var li = $(this).parent();
@@ -80,6 +55,5 @@ $('#delete-document').live('click', function(e) {
     });
 });
 
-//$(window).resize(resize);
-//$(window).focus(resize);
-//resize();
+$(window).resize(resize);
+resize();
