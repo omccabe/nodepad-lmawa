@@ -2,7 +2,7 @@
 function resize() {
     var height = $(window).height() - $('.navbar').height() - 100;
 
-    $('#DocumentTitles').css({
+    $('#document-titles').css({
         'height'   : height,
         'position' : 'relative',
         'top'      : '9px'
